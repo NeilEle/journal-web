@@ -11,7 +11,7 @@ function App() {
     <BrowserRouter>
       <div className="flex min-h-screen bg-amber-50">
         <Sidebar />
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
           <Routes>
             <Route path="/"           element={<Dashboard />}  />
             <Route path="/calendario" element={<Calendario />} />
