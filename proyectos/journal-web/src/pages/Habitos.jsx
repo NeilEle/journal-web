@@ -7,24 +7,24 @@ import { db } from '../db/database'
 dayjs.locale('es')
 
 const COLORES = [
-  { bg: 'bg-red-400',    ring: 'ring-red-400',    hex: '#f87171' },
-  { bg: 'bg-blue-400',   ring: 'ring-blue-400',   hex: '#60a5fa' },
-  { bg: 'bg-green-400',  ring: 'ring-green-400',  hex: '#4ade80' },
-  { bg: 'bg-purple-400', ring: 'ring-purple-400', hex: '#c084fc' },
-  { bg: 'bg-amber-400',  ring: 'ring-amber-400',  hex: '#fbbf24' },
-  { bg: 'bg-pink-400',   ring: 'ring-pink-400',   hex: '#f472b6' },
+  { bg: 'bg-red-400',    ring: 'ring-red-400'    },
+  { bg: 'bg-blue-400',   ring: 'ring-blue-400'   },
+  { bg: 'bg-green-400',  ring: 'ring-green-400'  },
+  { bg: 'bg-purple-400', ring: 'ring-purple-400' },
+  { bg: 'bg-amber-400',  ring: 'ring-amber-400'  },
+  { bg: 'bg-pink-400',   ring: 'ring-pink-400'   },
 ]
 
 function Habitos() {
-  const [mesActual]              = useState(dayjs())
-  const [habitos, setHabitos]    = useState([])
-  const [registros, setRegistros]= useState([])
-  const [modalAbierto, setModal] = useState(false)
-  const [nuevoNombre, setNombre] = useState('')
-  const [nuevoColor, setColor]   = useState(COLORES[0].bg)
+  const [mesActual]               = useState(dayjs())
+  const [habitos, setHabitos]     = useState([])
+  const [registros, setRegistros] = useState([])
+  const [modalAbierto, setModal]  = useState(false)
+  const [nuevoNombre, setNombre]  = useState('')
+  const [nuevoColor, setColor]    = useState(COLORES[0].bg)
 
-  const totalDias  = mesActual.daysInMonth()
-  const diasArray  = Array.from({ length: totalDias }, (_, i) => i + 1)
+  const totalDias = mesActual.daysInMonth()
+  const diasArray = Array.from({ length: totalDias }, (_, i) => i + 1)
 
   useEffect(() => {
     cargarDatos()
@@ -53,7 +53,9 @@ function Habitos() {
     cargarDatos()
   }
 
-  async function eliminarHabito(id) {
+  async function eliminarHabito(id, nombre) {
+    const confirmar = window.confirm(`¿Seguro que quieres eliminar "${nombre}"?\n\n¡Los hábitos se construyen con constancia! 💪`)
+    if (!confirmar) return
     await db.habitos.delete(id)
     await db.registros.where('habitoId').equals(id).delete()
     cargarDatos()
@@ -101,7 +103,7 @@ function Habitos() {
         </button>
       </div>
 
-      {/* Tabla de hábitos */}
+      {/* Tabla */}
       {habitos.length === 0 ? (
         <div className="text-center py-20 text-amber-300">
           <p className="text-6xl mb-4">🌱</p>
@@ -115,13 +117,9 @@ function Habitos() {
               <tr className="bg-amber-900 text-amber-50">
                 <th className="text-left px-4 py-3 rounded-tl-2xl min-w-36">Hábito</th>
                 {diasArray.map(d => (
-                  <th
-                    key={d}
-                    className={`w-8 text-center py-3 text-xs font-medium
-                      ${d === hoy && mesActual.month() === dayjs().month()
-                        ? 'text-amber-300 font-bold'
-                        : 'text-amber-300'}`}
-                  >
+                  <th key={d} className={`w-8 text-center py-3 text-xs font-medium
+                    ${d === hoy && mesActual.month() === dayjs().month()
+                      ? 'text-amber-300 font-bold' : 'text-amber-300'}`}>
                     {d}
                   </th>
                 ))}
@@ -130,30 +128,21 @@ function Habitos() {
             </thead>
             <tbody>
               {habitos.map((habito, idx) => (
-                <tr
-                  key={habito.id}
-                  className={idx % 2 === 0 ? 'bg-white' : 'bg-amber-50'}
-                >
-                  {/* Nombre del hábito */}
+                <tr key={habito.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-amber-50'}>
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
-  <div className={`w-3 h-3 rounded-full ${habito.color}`} />
-  <span className="font-medium text-amber-900 truncate max-w-28">
-    {habito.nombre}
-  </span>
-  <button
-    onClick={() => {
-      const confirmar = window.confirm(`¿Seguro que quieres eliminar "${habito.nombre}"?\n\nRecuerda: ¡los hábitos se construyen con constancia! 💪`)
-      if (confirmar) eliminarHabito(habito.id)
-    }}
-    className="ml-auto text-amber-100 hover:text-red-300 transition-all text-xs px-1"
-  >
-    ···
-  </button>
-</div>
+                      <div className={`w-3 h-3 rounded-full ${habito.color}`} />
+                      <span className="font-medium text-amber-900 truncate max-w-28">
+                        {habito.nombre}
+                      </span>
+                      <button
+                        onClick={() => eliminarHabito(habito.id, habito.nombre)}
+                        className="ml-auto text-amber-200 hover:text-red-300 transition-all text-xs px-1"
+                      >
+                        ···
+                      </button>
+                    </div>
                   </td>
-
-                  {/* Días */}
                   {diasArray.map(dia => {
                     const completado = estaCompletado(habito.id, dia)
                     const esHoy = dia === hoy && mesActual.month() === dayjs().month()
@@ -161,30 +150,24 @@ function Habitos() {
                       <td key={dia} className="text-center py-2">
                         <button
                           onClick={() => toggleDia(habito.id, dia)}
-                          className={`
-                            w-6 h-6 rounded-md mx-auto flex items-center justify-center transition-all
+                          className={`w-6 h-6 rounded-md mx-auto flex items-center justify-center transition-all
                             ${completado
                               ? `${habito.color} text-white shadow-sm`
                               : esHoy
                                 ? 'border-2 border-amber-400 hover:bg-amber-100'
                                 : 'border border-amber-100 hover:bg-amber-100'
-                            }
-                          `}
+                            }`}
                         >
                           {completado && <Check size={12} />}
                         </button>
                       </td>
                     )
                   })}
-
-                  {/* Porcentaje */}
                   <td className="px-4 py-2 text-center">
                     <span className={`text-xs font-bold ${
-                      progreso(habito.id) >= 70
-                        ? 'text-green-500'
-                        : progreso(habito.id) >= 40
-                          ? 'text-amber-500'
-                          : 'text-red-400'
+                      progreso(habito.id) >= 70 ? 'text-green-500'
+                      : progreso(habito.id) >= 40 ? 'text-amber-500'
+                      : 'text-red-400'
                     }`}>
                       {progreso(habito.id)}%
                     </span>
@@ -202,8 +185,11 @@ function Habitos() {
           <div className="bg-white rounded-2xl p-6 w-80 shadow-xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-amber-900 text-lg">Nuevo hábito</h3>
-              <button onClick={() => setModal(false)}>
-                <X size={20} className="text-amber-400 hover:text-amber-700" />
+              <button
+                onClick={() => setModal(false)}
+                className="text-amber-400 hover:text-amber-700 text-xl font-bold px-2"
+              >
+                ✕
               </button>
             </div>
 
